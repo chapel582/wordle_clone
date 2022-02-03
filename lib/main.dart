@@ -30,16 +30,17 @@ class _LetterGridState extends State<LetterGrid> {
     );
     const charStyle = TextStyle(color: Color(0xFFFFFFFF));
 
-    for(var i = 0; i < 30; i++){
+    for (var i = 0; i < 30; i++) {
       guesses.add('');
     }
 
     var gridViewChildren = <Widget>[];
-    
+
     for (var i = 0; i < 30; i++) {
       gridViewChildren.add(Container(
         child: Align(
-            alignment: Alignment.center, child: Text(guesses[i], style: charStyle)),
+            alignment: Alignment.center,
+            child: Text(guesses[i], style: charStyle)),
         decoration: charBoxDecoration,
       ));
     }
@@ -54,35 +55,37 @@ class _LetterGridState extends State<LetterGrid> {
             controller: _controller,
             autofocus: true,
             autocorrect: false,
+            enableSuggestions: false,
+            keyboardType: TextInputType.visiblePassword,
             maxLength: 5,
             onChanged: (value) {
               debugPrint('${value}, ${startGuess}, ${guesses}');
-              setState((){
-                if(value.length > 0){
-                  for(var i = startGuess; i < startGuess + value.length; i++){
+              setState(() {
+                if (value.length > 0) {
+                  for (var i = startGuess; i < startGuess + value.length; i++) {
                     guesses[i] = value[i % wordLength];
                   }
-                  for(var i = startGuess + value.length; i < startGuess + wordLength; i++){
+                  for (var i = startGuess + value.length;
+                      i < startGuess + wordLength;
+                      i++) {
                     guesses[i] = '';
                   }
-                }
-                else{
-                  for(var i = startGuess; i < startGuess + wordLength; i++){
+                } else {
+                  for (var i = startGuess; i < startGuess + wordLength; i++) {
                     guesses[i] = '';
                   }
                 }
               });
             },
             onSubmitted: (value) {
-              setState((){
+              setState(() {
                 debugPrint('resetting text field?');
                 startGuess += wordLength;
                 // TODO: handle reaching the end
                 _controller.clear();
               });
             },
-            onEditingComplete: () {}
-        )));
+            onEditingComplete: () {})));
 
     return Scaffold(
         appBar: AppBar(
