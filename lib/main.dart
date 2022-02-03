@@ -17,7 +17,11 @@ class LetterGrid extends StatefulWidget {
 }
 
 class _LetterGridState extends State<LetterGrid> {
-  var guess = '';
+  var guesses = <String>[];
+  int startGuess = 0;
+  final wordLength = 5;
+
+  final TextEditingController _controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -25,182 +29,72 @@ class _LetterGridState extends State<LetterGrid> {
       color: Color(0xFF5F5F5F),
     );
     const charStyle = TextStyle(color: Color(0xFFFFFFFF));
+
+    for(var i = 0; i < 30; i++){
+      guesses.add('');
+    }
+
+    var gridViewChildren = <Widget>[];
+    
+    for (var i = 0; i < 30; i++) {
+      gridViewChildren.add(Container(
+        child: Align(
+            alignment: Alignment.center, child: Text(guesses[i], style: charStyle)),
+        decoration: charBoxDecoration,
+      ));
+    }
+
+    gridViewChildren.add(Visibility(
+        visible: false,
+        maintainState: true,
+        maintainAnimation: true,
+        maintainSize: true,
+        maintainInteractivity: true,
+        child: TextField(
+            controller: _controller,
+            autofocus: true,
+            autocorrect: false,
+            maxLength: 5,
+            onChanged: (value) {
+              debugPrint('${value}, ${startGuess}, ${guesses}');
+              setState((){
+                if(value.length > 0){
+                  for(var i = startGuess; i < startGuess + value.length; i++){
+                    guesses[i] = value[i % wordLength];
+                  }
+                  for(var i = startGuess + value.length; i < startGuess + wordLength; i++){
+                    guesses[i] = '';
+                  }
+                }
+                else{
+                  for(var i = startGuess; i < startGuess + wordLength; i++){
+                    guesses[i] = '';
+                  }
+                }
+              });
+            },
+            onSubmitted: (value) {
+              setState((){
+                debugPrint('resetting text field?');
+                startGuess += wordLength;
+                // TODO: handle reaching the end
+                _controller.clear();
+              });
+            },
+            onEditingComplete: () {}
+        )));
+
     return Scaffold(
         appBar: AppBar(
           title: const Text('Wordle Clone'),
         ),
         backgroundColor: Color(0xFF000000),
-        body: GestureDetector(
-            child: GridView.count(
-                crossAxisCount: 5,
-                padding: const EdgeInsets.all(20),
-                crossAxisSpacing: 5,
-                mainAxisSpacing: 5,
-                children: <Widget>[
-              Container(
-                child: Align(
-                    alignment: Alignment.center,
-                    child: Text('', style: charStyle)),
-                decoration: charBoxDecoration,
-              ),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('F', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('G', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('H', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('I', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('J', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('K', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('L', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('M', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('N', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('O', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('P', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('Q', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('R', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('S', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('T', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('U', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('V', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('W', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('X', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('Y', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('Z', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('A', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('B', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('C', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Container(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('D', style: charStyle)),
-                  decoration: charBoxDecoration),
-              Visibility(
-                  visible: false,
-                  maintainState: true,
-                  maintainAnimation: true,
-                  maintainSize: true,
-                  maintainInteractivity: true,
-                  child: TextField(
-                    autofocus: true,
-                    autocorrect: false,
-                    onChanged: (value) {
-                      debugPrint(value);
-                    }))
-            ])));
+        body: GridView.count(
+            crossAxisCount: 5,
+            padding: const EdgeInsets.all(20),
+            crossAxisSpacing: 5,
+            mainAxisSpacing: 5,
+            children: gridViewChildren));
   }
 }
 
