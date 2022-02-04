@@ -45,7 +45,11 @@ void showAlertDialog(BuildContext context, String text) {
   );
 }
 
-void endGame(BuildContext context, String message) async{
+void endGame(
+  BuildContext context,
+  String message,
+  List<GuessStateEnum> guessState,
+) async {
   final prefs = await SharedPreferences.getInstance();
 
   var totalPlayed = prefs.getInt('totalPlayed') ?? 0;
@@ -58,15 +62,38 @@ void endGame(BuildContext context, String message) async{
   debugPrint('plays: ${totalPlayed} wins: ${totalWins}');
 
   String finalMessage = '${message}\nWin Rate: ${totalWins / totalPlayed}\n';
-  for(var round = 1; round <= 5; round++){
+  for (var round = 1; round <= 5; round++) {
     var roundWins = prefs.getInt('round${round}Wins') ?? 0;
     finalMessage += 'Round ${round} wins: ${roundWins}\n';
   }
 
+  String resultsText = '';
+  for (var i = 0; i < guessState.length; i++) {
+    if (guessState[i] == GuessStateEnum.unchecked) {
+      break;
+    } else if (guessState[i] == GuessStateEnum.not_present) {
+      resultsText += '⬛';
+    } else if (guessState[i] == GuessStateEnum.present) {
+      resultsText += '🟨';
+    } else if (guessState[i] == GuessStateEnum.correct) {
+      resultsText += '🟩';
+    }
+
+    if ((i % 5) == 4) {
+      resultsText += '\n';
+    }
+  }
+  debugPrint(resultsText);
+  Clipboard.setData(ClipboardData(text: resultsText));
+
   showAlertDialog(context, finalMessage);
 }
 
-void winGame(BuildContext context, int winningRound) async{
+void winGame(
+  BuildContext context,
+  int winningRound,
+  List<GuessStateEnum> guessState,
+) async {
   debugPrint('winningRound: ${winningRound}');
   final prefs = await SharedPreferences.getInstance();
 
@@ -79,7 +106,7 @@ void winGame(BuildContext context, int winningRound) async{
   updateRoundWins++;
   prefs.setInt('round${winningRound}Wins', updateRoundWins);
 
-  endGame(context, "You won!");
+  endGame(context, "You won!", guessState);
 }
 
 enum GuessStateEnum { unchecked, not_present, present, correct }
@@ -188,16 +215,24 @@ class _LetterGridState extends State<LetterGrid> {
 
                 if (startGuess < 25) {
                   if (wordsMatch) {
-                    winGame(context, (startGuess / wordLength).toInt() + 1);
+                    winGame(
+                      context,
+                      (startGuess / wordLength).toInt() + 1,
+                      guessState,
+                    );
                   } else {
                     startGuess += wordLength;
                     _controller.clear();
                   }
                 } else if (startGuess == 25) {
                   if (wordsMatch) {
-                    winGame(context,  (startGuess / wordLength).toInt() + 1);
+                    winGame(
+                      context,
+                      (startGuess / wordLength).toInt() + 1,
+                      guessState,
+                    );
                   } else {
-                    endGame(context, "You lost.");
+                    endGame(context, "You lost.", guessState);
                   }
                 }
               } else {
@@ -232,7 +267,8 @@ class _LetterGridState extends State<LetterGrid> {
     }
     final now = DateTime.now();
     final difference = now.difference(DateTime(2022, DateTime.february, 3));
-    final wordSelector = Random(1643945711103346 + (difference.inHours / 24).toInt());
+    final wordSelector =
+        Random(1643945711103346 + (difference.inHours / 24).toInt());
     this.word = words[wordSelector.nextInt(words.length)];
     debugPrint(this.word);
   }
