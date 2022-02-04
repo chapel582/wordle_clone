@@ -13,7 +13,7 @@ void main() {
 
 enum GuessStateEnum { unchecked, not_present, present, correct }
 
-void copyResults(List<GuessStateEnum> guessState){
+void copyResults(List<GuessStateEnum> guessState) {
   String resultsText = '';
   for (var i = 0; i < guessState.length; i++) {
     if (guessState[i] == GuessStateEnum.unchecked) {
@@ -33,7 +33,7 @@ void copyResults(List<GuessStateEnum> guessState){
   Clipboard.setData(ClipboardData(text: resultsText));
 }
 
-void showAlertDialog(BuildContext context, String text){
+void showAlertDialog(BuildContext context, String text) {
   Widget cancelButton = TextButton(
     child: Text("Dismiss"),
     onPressed: () {
@@ -45,9 +45,7 @@ void showAlertDialog(BuildContext context, String text){
   AlertDialog alert = AlertDialog(
     title: Text("Alert"),
     content: Text(text),
-    actions: [
-      cancelButton
-    ],
+    actions: [cancelButton],
   );
 
   // show the dialog
@@ -59,7 +57,11 @@ void showAlertDialog(BuildContext context, String text){
   );
 }
 
-void showEndGameAlert(BuildContext context, String text, List<GuessStateEnum> guessState,) {
+void showEndGameAlert(
+  BuildContext context,
+  String text,
+  List<GuessStateEnum> guessState,
+) {
   // set up the buttons
   Widget cancelButton = TextButton(
     child: Text("Dismiss"),
@@ -70,7 +72,7 @@ void showEndGameAlert(BuildContext context, String text, List<GuessStateEnum> gu
   Widget continueButton = TextButton(
     child: Text("Copy results"),
     onPressed: () {
-        copyResults(guessState);
+      copyResults(guessState);
     },
   );
 
@@ -170,16 +172,16 @@ class _LetterGridState extends State<LetterGrid> {
     }
   }
 
-  void _copyResults(){
+  void _copyResults() {
     copyResults(guessState);
   }
 
-  void _loseGame(){
+  void _loseGame() {
     canPlay = false;
     endGame(context, 'You lost.', guessState);
   }
 
-  void _winGame(int winningRound){
+  void _winGame(int winningRound) {
     canPlay = false;
     winGame(context, winningRound, guessState);
   }
@@ -221,11 +223,13 @@ class _LetterGridState extends State<LetterGrid> {
           keyboardType: TextInputType.visiblePassword,
           maxLength: 5,
           onChanged: (value) {
-            if(canPlay){
+            if (canPlay) {
               setState(
                 () {
                   if (value.length > 0) {
-                    for (var i = startGuess; i < startGuess + value.length; i++) {
+                    for (var i = startGuess;
+                        i < startGuess + value.length;
+                        i++) {
                       guesses[i] = value[i % wordLength].toUpperCase();
                     }
                     for (var i = startGuess + value.length;
@@ -243,7 +247,7 @@ class _LetterGridState extends State<LetterGrid> {
             }
           },
           onSubmitted: (value) {
-            if(canPlay){
+            if (canPlay) {
               setState(() {
                 if (value.length == 5 && words.contains(value.toUpperCase())) {
                   bool wordsMatch = true;
@@ -260,9 +264,7 @@ class _LetterGridState extends State<LetterGrid> {
 
                   if (startGuess < 25) {
                     if (wordsMatch) {
-                      _winGame(
-                        (startGuess / wordLength).toInt() + 1
-                      );
+                      _winGame((startGuess / wordLength).toInt() + 1);
                     } else {
                       startGuess += wordLength;
                       _controller.clear();
