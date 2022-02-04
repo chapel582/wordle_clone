@@ -11,18 +11,62 @@ void main() {
   runApp(const MyApp());
 }
 
-void showAlertDialog(BuildContext context, String text) {
+enum GuessStateEnum { unchecked, not_present, present, correct }
+
+void showAlertDialog(BuildContext context, String text){
+  Widget cancelButton = TextButton(
+    child: Text("Dismiss"),
+    onPressed: () {
+      Navigator.of(context).pop();
+    },
+  );
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Alert"),
+    content: Text(text),
+    actions: [
+      cancelButton
+    ],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
+void showEndGameAlert(BuildContext context, String text, List<GuessStateEnum> guessState,) {
   // set up the buttons
   Widget cancelButton = TextButton(
-    child: Text("Cancel"),
+    child: Text("Dismiss"),
     onPressed: () {
       Navigator.of(context).pop();
     },
   );
   Widget continueButton = TextButton(
-    child: Text("Continue"),
+    child: Text("Copy results"),
     onPressed: () {
-      Navigator.of(context).pop();
+        String resultsText = '';
+        for (var i = 0; i < guessState.length; i++) {
+          if (guessState[i] == GuessStateEnum.unchecked) {
+            break;
+          } else if (guessState[i] == GuessStateEnum.not_present) {
+            resultsText += '⬛';
+          } else if (guessState[i] == GuessStateEnum.present) {
+            resultsText += '🟨';
+          } else if (guessState[i] == GuessStateEnum.correct) {
+            resultsText += '🟩';
+          }
+
+          if ((i % 5) == 4) {
+            resultsText += '\n';
+          }
+        }
+        Clipboard.setData(ClipboardData(text: resultsText));
     },
   );
 
@@ -67,26 +111,7 @@ void endGame(
     finalMessage += 'Round ${round} wins: ${roundWins}\n';
   }
 
-  String resultsText = '';
-  for (var i = 0; i < guessState.length; i++) {
-    if (guessState[i] == GuessStateEnum.unchecked) {
-      break;
-    } else if (guessState[i] == GuessStateEnum.not_present) {
-      resultsText += '⬛';
-    } else if (guessState[i] == GuessStateEnum.present) {
-      resultsText += '🟨';
-    } else if (guessState[i] == GuessStateEnum.correct) {
-      resultsText += '🟩';
-    }
-
-    if ((i % 5) == 4) {
-      resultsText += '\n';
-    }
-  }
-  debugPrint(resultsText);
-  Clipboard.setData(ClipboardData(text: resultsText));
-
-  showAlertDialog(context, finalMessage);
+  showEndGameAlert(context, finalMessage, guessState);
 }
 
 void winGame(
@@ -108,8 +133,6 @@ void winGame(
 
   endGame(context, "You won!", guessState);
 }
-
-enum GuessStateEnum { unchecked, not_present, present, correct }
 
 class LetterGrid extends StatefulWidget {
   const LetterGrid({Key? key}) : super(key: key);
