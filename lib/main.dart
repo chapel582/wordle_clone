@@ -135,30 +135,34 @@ class _LetterGridState extends State<LetterGrid> {
           onSubmitted: (value) {
             setState(() {
               if (value.length == 5 && words.contains(value.toUpperCase())) {
-                if (startGuess < 25) {
-                  bool wordsMatch = true;
-                  for (var i = startGuess; i < startGuess + wordLength; i++) {
-                    debugPrint('${guesses[i]}, ${word[i % wordLength]}');
-                    if (guesses[i] == word[i % wordLength]) {
-                      guessState[i] = GuessStateEnum.correct;
-                    } else if (word.contains(guesses[i])) {
-                      guessState[i] = GuessStateEnum.present;
-                    } else {
-                      guessState[i] = GuessStateEnum.unchecked_or_wrong;
-                      wordsMatch = false;
-                    }
-                  }
-                  if (!wordsMatch) {
-                    startGuess += wordLength;
-                    // TODO: handle reaching the end
-                    _controller.clear();
+                bool wordsMatch = true;
+                for (var i = startGuess; i < startGuess + wordLength; i++) {
+                  debugPrint('${guesses[i]}, ${word[i % wordLength]}');
+                  if (guesses[i] == word[i % wordLength]) {
+                    guessState[i] = GuessStateEnum.correct;
+                  } else if (word.contains(guesses[i])) {
+                    guessState[i] = GuessStateEnum.present;
                   } else {
-                    showAlertDialog(context, 'Success');
+                    guessState[i] = GuessStateEnum.unchecked_or_wrong;
+                    wordsMatch = false;
                   }
-                } else if (startGuess == 25) {}
+                }
+
+                if (startGuess < 25) {
+                  if (wordsMatch) {
+                    showAlertDialog(context, 'Success');
+                  } else {
+                    startGuess += wordLength;
+                    _controller.clear();
+                  }
+                } else if (startGuess == 25) {
+                    if(wordsMatch){
+                      showAlertDialog(context, 'Success');
+                    } else {
+                      showAlertDialog(context, 'Failure');
+                    }
+                }
               } else {
-                // TODO: pop up a message saying that word isn't recognized
-                debugPrint('words does not contain ${value}');
                 showAlertDialog(context, 'Unrecognized word');
               }
             });
