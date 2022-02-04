@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 
 void main() {
@@ -44,7 +45,44 @@ void showAlertDialog(BuildContext context, String text) {
   );
 }
 
-enum GuessStateEnum { unchecked_or_wrong, present, correct }
+void endGame(BuildContext context, String message) async{
+  final prefs = await SharedPreferences.getInstance();
+
+  var totalPlayed = prefs.getInt('totalPlayed') ?? 0;
+  totalPlayed++;
+  prefs.setInt('totalPlayed', totalPlayed);
+
+  var totalWins = prefs.getInt('totalWins') ?? 0;
+  prefs.setInt('totalWins', totalWins);
+
+  debugPrint('plays: ${totalPlayed} wins: ${totalWins}');
+
+  String finalMessage = '${message}\nWin Rate: ${totalWins / totalPlayed}\n';
+  for(var round = 1; round <= 5; round++){
+    var roundWins = prefs.getInt('round${round}Wins') ?? 0;
+    finalMessage += 'Round ${round} wins: ${roundWins}\n';
+  }
+
+  showAlertDialog(context, finalMessage);
+}
+
+void winGame(BuildContext context, int winningRound) async{
+  debugPrint('winningRound: ${winningRound}');
+  final prefs = await SharedPreferences.getInstance();
+
+  var totalWins = prefs.getInt('totalWins') ?? 0;
+  totalWins++;
+  prefs.setInt('totalWins', totalWins);
+
+  var updateRoundWins = prefs.getInt('round${winningRound}Wins') ?? 0;
+  debugPrint('${updateRoundWins}');
+  updateRoundWins++;
+  prefs.setInt('round${winningRound}Wins', updateRoundWins);
+
+  endGame(context, "You won!");
+}
+
+enum GuessStateEnum { unchecked, not_present, present, correct }
 
 class LetterGrid extends StatefulWidget {
   const LetterGrid({Key? key}) : super(key: key);
@@ -58,6 +96,7 @@ class _LetterGridState extends State<LetterGrid> {
   var guessState = <GuessStateEnum>[];
   final charBoxDecorations = <BoxDecoration>[
     BoxDecoration(color: Color(0xFF5F5F5F)),
+    BoxDecoration(color: Color(0xFF2F2F2F)),
     BoxDecoration(color: Color(0xFFFFDF00)),
     BoxDecoration(color: Color(0xFF32CD32)),
   ];
@@ -72,7 +111,7 @@ class _LetterGridState extends State<LetterGrid> {
   void initState() {
     super.initState();
     for (var i = 0; i < 30; i++) {
-      guessState.add(GuessStateEnum.unchecked_or_wrong);
+      guessState.add(GuessStateEnum.unchecked);
     }
   }
 
@@ -142,23 +181,23 @@ class _LetterGridState extends State<LetterGrid> {
                   } else if (word.contains(guesses[i])) {
                     guessState[i] = GuessStateEnum.present;
                   } else {
-                    guessState[i] = GuessStateEnum.unchecked_or_wrong;
+                    guessState[i] = GuessStateEnum.not_present;
                     wordsMatch = false;
                   }
                 }
 
                 if (startGuess < 25) {
                   if (wordsMatch) {
-                    showAlertDialog(context, 'Success');
+                    winGame(context, (startGuess / wordLength).toInt() + 1);
                   } else {
                     startGuess += wordLength;
                     _controller.clear();
                   }
                 } else if (startGuess == 25) {
                   if (wordsMatch) {
-                    showAlertDialog(context, 'Success');
+                    winGame(context,  (startGuess / wordLength).toInt() + 1);
                   } else {
-                    showAlertDialog(context, 'Failure');
+                    endGame(context, "You lost.");
                   }
                 }
               } else {
