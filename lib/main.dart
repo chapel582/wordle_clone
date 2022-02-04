@@ -13,6 +13,26 @@ void main() {
 
 enum GuessStateEnum { unchecked, not_present, present, correct }
 
+void copyResults(List<GuessStateEnum> guessState){
+  String resultsText = '';
+  for (var i = 0; i < guessState.length; i++) {
+    if (guessState[i] == GuessStateEnum.unchecked) {
+      break;
+    } else if (guessState[i] == GuessStateEnum.not_present) {
+      resultsText += '⬛';
+    } else if (guessState[i] == GuessStateEnum.present) {
+      resultsText += '🟨';
+    } else if (guessState[i] == GuessStateEnum.correct) {
+      resultsText += '🟩';
+    }
+
+    if ((i % 5) == 4) {
+      resultsText += '\n';
+    }
+  }
+  Clipboard.setData(ClipboardData(text: resultsText));
+}
+
 void showAlertDialog(BuildContext context, String text){
   Widget cancelButton = TextButton(
     child: Text("Dismiss"),
@@ -50,23 +70,7 @@ void showEndGameAlert(BuildContext context, String text, List<GuessStateEnum> gu
   Widget continueButton = TextButton(
     child: Text("Copy results"),
     onPressed: () {
-        String resultsText = '';
-        for (var i = 0; i < guessState.length; i++) {
-          if (guessState[i] == GuessStateEnum.unchecked) {
-            break;
-          } else if (guessState[i] == GuessStateEnum.not_present) {
-            resultsText += '⬛';
-          } else if (guessState[i] == GuessStateEnum.present) {
-            resultsText += '🟨';
-          } else if (guessState[i] == GuessStateEnum.correct) {
-            resultsText += '🟩';
-          }
-
-          if ((i % 5) == 4) {
-            resultsText += '\n';
-          }
-        }
-        Clipboard.setData(ClipboardData(text: resultsText));
+        copyResults(guessState);
     },
   );
 
@@ -154,6 +158,7 @@ class _LetterGridState extends State<LetterGrid> {
   final wordLength = 5;
   String word = '';
   var words = <String>[];
+  bool canPlay = true;
 
   final TextEditingController _controller = TextEditingController();
 
@@ -163,6 +168,20 @@ class _LetterGridState extends State<LetterGrid> {
     for (var i = 0; i < 30; i++) {
       guessState.add(GuessStateEnum.unchecked);
     }
+  }
+
+  void _copyResults(){
+    copyResults(guessState);
+  }
+
+  void _loseGame(){
+    canPlay = false;
+    endGame(context, 'You lost.', guessState);
+  }
+
+  void _winGame(int winningRound){
+    canPlay = false;
+    winGame(context, winningRound, guessState);
   }
 
   @override
@@ -202,66 +221,64 @@ class _LetterGridState extends State<LetterGrid> {
           keyboardType: TextInputType.visiblePassword,
           maxLength: 5,
           onChanged: (value) {
-            setState(
-              () {
-                if (value.length > 0) {
-                  for (var i = startGuess; i < startGuess + value.length; i++) {
-                    guesses[i] = value[i % wordLength].toUpperCase();
+            if(canPlay){
+              setState(
+                () {
+                  if (value.length > 0) {
+                    for (var i = startGuess; i < startGuess + value.length; i++) {
+                      guesses[i] = value[i % wordLength].toUpperCase();
+                    }
+                    for (var i = startGuess + value.length;
+                        i < startGuess + wordLength;
+                        i++) {
+                      guesses[i] = '';
+                    }
+                  } else {
+                    for (var i = startGuess; i < startGuess + wordLength; i++) {
+                      guesses[i] = '';
+                    }
                   }
-                  for (var i = startGuess + value.length;
-                      i < startGuess + wordLength;
-                      i++) {
-                    guesses[i] = '';
-                  }
-                } else {
-                  for (var i = startGuess; i < startGuess + wordLength; i++) {
-                    guesses[i] = '';
-                  }
-                }
-              },
-            );
+                },
+              );
+            }
           },
           onSubmitted: (value) {
-            setState(() {
-              if (value.length == 5 && words.contains(value.toUpperCase())) {
-                bool wordsMatch = true;
-                for (var i = startGuess; i < startGuess + wordLength; i++) {
-                  if (guesses[i] == word[i % wordLength]) {
-                    guessState[i] = GuessStateEnum.correct;
-                  } else if (word.contains(guesses[i])) {
-                    guessState[i] = GuessStateEnum.present;
-                  } else {
-                    guessState[i] = GuessStateEnum.not_present;
-                    wordsMatch = false;
+            if(canPlay){
+              setState(() {
+                if (value.length == 5 && words.contains(value.toUpperCase())) {
+                  bool wordsMatch = true;
+                  for (var i = startGuess; i < startGuess + wordLength; i++) {
+                    if (guesses[i] == word[i % wordLength]) {
+                      guessState[i] = GuessStateEnum.correct;
+                    } else if (word.contains(guesses[i])) {
+                      guessState[i] = GuessStateEnum.present;
+                    } else {
+                      guessState[i] = GuessStateEnum.not_present;
+                      wordsMatch = false;
+                    }
                   }
-                }
 
-                if (startGuess < 25) {
-                  if (wordsMatch) {
-                    winGame(
-                      context,
-                      (startGuess / wordLength).toInt() + 1,
-                      guessState,
-                    );
-                  } else {
-                    startGuess += wordLength;
-                    _controller.clear();
+                  if (startGuess < 25) {
+                    if (wordsMatch) {
+                      _winGame(
+                        (startGuess / wordLength).toInt() + 1
+                      );
+                    } else {
+                      startGuess += wordLength;
+                      _controller.clear();
+                    }
+                  } else if (startGuess == 25) {
+                    if (wordsMatch) {
+                      _winGame((startGuess / wordLength).toInt() + 1);
+                    } else {
+                      _loseGame();
+                    }
                   }
-                } else if (startGuess == 25) {
-                  if (wordsMatch) {
-                    winGame(
-                      context,
-                      (startGuess / wordLength).toInt() + 1,
-                      guessState,
-                    );
-                  } else {
-                    endGame(context, "You lost.", guessState);
-                  }
+                } else {
+                  showAlertDialog(context, 'Unrecognized word');
                 }
-              } else {
-                showAlertDialog(context, 'Unrecognized word');
-              }
-            });
+              });
+            }
           },
           onEditingComplete: () {},
         ),
@@ -271,6 +288,13 @@ class _LetterGridState extends State<LetterGrid> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Wordle Clone'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _copyResults,
+            tooltip: 'Saved Suggestions',
+          ),
+        ],
       ),
       backgroundColor: Color(0xFF000000),
       body: GridView.count(
