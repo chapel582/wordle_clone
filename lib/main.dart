@@ -10,6 +10,40 @@ void main() {
   runApp(const MyApp());
 }
 
+void showAlertDialog(BuildContext context, String text) {
+  // set up the buttons
+  Widget cancelButton = TextButton(
+    child: Text("Cancel"),
+    onPressed: () {
+      Navigator.of(context).pop();
+    },
+  );
+  Widget continueButton = TextButton(
+    child: Text("Continue"),
+    onPressed: () {
+      Navigator.of(context).pop();
+    },
+  );
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Results"),
+    content: Text(text),
+    actions: [
+      cancelButton,
+      continueButton,
+    ],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
 enum GuessStateEnum { unchecked_or_wrong, present, correct }
 
 class LetterGrid extends StatefulWidget {
@@ -118,11 +152,14 @@ class _LetterGridState extends State<LetterGrid> {
                     startGuess += wordLength;
                     // TODO: handle reaching the end
                     _controller.clear();
-                  } else if (startGuess == 25) {}
-                }
+                  } else {
+                    showAlertDialog(context, 'Success');
+                  }
+                } else if (startGuess == 25) {}
               } else {
                 // TODO: pop up a message saying that word isn't recognized
                 debugPrint('words does not contain ${value}');
+                showAlertDialog(context, 'Unrecognized word');
               }
             });
           },
@@ -148,7 +185,7 @@ class _LetterGridState extends State<LetterGrid> {
   void loadWords() async {
     String rawWords = await rootBundle.loadString('assets/words.txt');
     words = rawWords.split('\n');
-    for(var i = 0; i < words.length; i++){
+    for (var i = 0; i < words.length; i++) {
       words[i] = words[i].trim().toUpperCase();
     }
     final wordSelector = Random(1643945711103346);
