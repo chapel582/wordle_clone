@@ -156,11 +156,11 @@ class _LetterGridState extends State<LetterGrid> {
                     _controller.clear();
                   }
                 } else if (startGuess == 25) {
-                    if(wordsMatch){
-                      showAlertDialog(context, 'Success');
-                    } else {
-                      showAlertDialog(context, 'Failure');
-                    }
+                  if (wordsMatch) {
+                    showAlertDialog(context, 'Success');
+                  } else {
+                    showAlertDialog(context, 'Failure');
+                  }
                 }
               } else {
                 showAlertDialog(context, 'Unrecognized word');
