@@ -31,7 +31,7 @@ class _LetterGridState extends State<LetterGrid> {
     const charBoxDecoration = BoxDecoration(
       color: Color(0xFF5F5F5F),
     );
-    const charStyle = TextStyle(color: Color(0xFFFFFFFF));
+    const charStyle = TextStyle(color: Color(0xFFFFFFFF), fontSize: 40);
 
     for (var i = 0; i < 30; i++) {
       guesses.add('');
@@ -69,7 +69,7 @@ class _LetterGridState extends State<LetterGrid> {
               () {
                 if (value.length > 0) {
                   for (var i = startGuess; i < startGuess + value.length; i++) {
-                    guesses[i] = value[i % wordLength];
+                    guesses[i] = value[i % wordLength].toUpperCase();
                   }
                   for (var i = startGuess + value.length;
                       i < startGuess + wordLength;
