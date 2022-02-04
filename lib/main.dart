@@ -137,7 +137,6 @@ class _LetterGridState extends State<LetterGrid> {
               if (value.length == 5 && words.contains(value.toUpperCase())) {
                 bool wordsMatch = true;
                 for (var i = startGuess; i < startGuess + wordLength; i++) {
-                  debugPrint('${guesses[i]}, ${word[i % wordLength]}');
                   if (guesses[i] == word[i % wordLength]) {
                     guessState[i] = GuessStateEnum.correct;
                   } else if (word.contains(guesses[i])) {
@@ -192,7 +191,9 @@ class _LetterGridState extends State<LetterGrid> {
     for (var i = 0; i < words.length; i++) {
       words[i] = words[i].trim().toUpperCase();
     }
-    final wordSelector = Random(1643945711103346);
+    final now = DateTime.now();
+    final difference = now.difference(DateTime(2022, DateTime.february, 3));
+    final wordSelector = Random(1643945711103346 + (difference.inHours / 24).toInt());
     this.word = words[wordSelector.nextInt(words.length)];
     debugPrint(this.word);
   }
