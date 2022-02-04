@@ -10,6 +10,8 @@ void main() {
   runApp(const MyApp());
 }
 
+enum GuessStateEnum { unchecked_or_wrong, present, correct }
+
 class LetterGrid extends StatefulWidget {
   const LetterGrid({Key? key}) : super(key: key);
 
@@ -19,18 +21,30 @@ class LetterGrid extends StatefulWidget {
 
 class _LetterGridState extends State<LetterGrid> {
   var guesses = <String>[];
+  var guessState = <GuessStateEnum>[];
+  final charBoxDecorations = <BoxDecoration>[
+    BoxDecoration(color: Color(0xFF5F5F5F)),
+    BoxDecoration(color: Color(0xFFFFDF00)),
+    BoxDecoration(color: Color(0xFF32CD32)),
+  ];
   int startGuess = 0;
   final wordLength = 5;
   String word = '';
+  var words = <String>[];
 
   final TextEditingController _controller = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    for (var i = 0; i < 30; i++) {
+      guessState.add(GuessStateEnum.unchecked_or_wrong);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     loadWords();
-    const charBoxDecoration = BoxDecoration(
-      color: Color(0xFF5F5F5F),
-    );
     const charStyle = TextStyle(color: Color(0xFFFFFFFF), fontSize: 40);
 
     for (var i = 0; i < 30; i++) {
@@ -45,7 +59,7 @@ class _LetterGridState extends State<LetterGrid> {
           child: Align(
               alignment: Alignment.center,
               child: Text(guesses[i], style: charStyle)),
-          decoration: charBoxDecoration,
+          decoration: charBoxDecorations[guessState[i].index],
         ),
       );
     }
@@ -85,15 +99,32 @@ class _LetterGridState extends State<LetterGrid> {
             );
           },
           onSubmitted: (value) {
-            setState(
-              () {
+            setState(() {
+              if (value.length == 5 && words.contains(value.toUpperCase())) {
                 if (startGuess < 25) {
-                  startGuess += wordLength;
-                  // TODO: handle reaching the end
-                  _controller.clear();
-                } else if (startGuess == 25) {}
-              },
-            );
+                  bool wordsMatch = true;
+                  for (var i = startGuess; i < startGuess + wordLength; i++) {
+                    debugPrint('${guesses[i]}, ${word[i % wordLength]}');
+                    if (guesses[i] == word[i % wordLength]) {
+                      guessState[i] = GuessStateEnum.correct;
+                    } else if (word.contains(guesses[i])) {
+                      guessState[i] = GuessStateEnum.present;
+                    } else {
+                      guessState[i] = GuessStateEnum.unchecked_or_wrong;
+                      wordsMatch = false;
+                    }
+                  }
+                  if (!wordsMatch) {
+                    startGuess += wordLength;
+                    // TODO: handle reaching the end
+                    _controller.clear();
+                  } else if (startGuess == 25) {}
+                }
+              } else {
+                // TODO: pop up a message saying that word isn't recognized
+                debugPrint('words does not contain ${value}');
+              }
+            });
           },
           onEditingComplete: () {},
         ),
@@ -116,7 +147,10 @@ class _LetterGridState extends State<LetterGrid> {
 
   void loadWords() async {
     String rawWords = await rootBundle.loadString('assets/words.txt');
-    final words = rawWords.split('\n');
+    words = rawWords.split('\n');
+    for(var i = 0; i < words.length; i++){
+      words[i] = words[i].trim().toUpperCase();
+    }
     final wordSelector = Random(1643945711103346);
     this.word = words[wordSelector.nextInt(words.length)];
     debugPrint(this.word);
