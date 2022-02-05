@@ -183,6 +183,12 @@ class _LetterGridState extends State<LetterGrid> {
     super.dispose();
   }
 
+  void _deleteRecord() async{
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    _updateCanPlay();
+  }
+
   void _copyResults() {
     copyResults(guessState);
   }
@@ -337,7 +343,12 @@ class _LetterGridState extends State<LetterGrid> {
           IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: _updateCanPlay,
-              tooltip: 'Check for new game'),
+              tooltip: 'Check for new game',),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _deleteRecord,
+            tooltip: 'Delete game records'
+          )
         ],
       ),
       backgroundColor: Color(0xFF000000),
