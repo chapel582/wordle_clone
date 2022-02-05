@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
+import 'dart:async';
 
 void main() {
   runApp(const MyApp());
@@ -165,6 +166,7 @@ class _LetterGridState extends State<LetterGrid> {
   bool canPlay = true;
 
   final TextEditingController _controller = TextEditingController();
+  FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -173,6 +175,12 @@ class _LetterGridState extends State<LetterGrid> {
     for (var i = 0; i < 30; i++) {
       guessState.add(GuessStateEnum.unchecked);
     }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
   }
 
   void _copyResults() {
@@ -193,23 +201,22 @@ class _LetterGridState extends State<LetterGrid> {
     final prefs = await SharedPreferences.getInstance();
 
     String lastPlayedTimeStr = prefs.getString('lastPlayedTime') ?? '';
-    if (lastPlayedTimeStr != ''){
+    if (lastPlayedTimeStr != '') {
       final lastPlayedTime = DateTime.parse(lastPlayedTimeStr);
       final now = DateTime.now();
       final todayMidnight = DateTime(now.year, now.month, now.day);
       canPlay = lastPlayedTime.isBefore(todayMidnight);
-    }
-    else{
+    } else {
       canPlay = true;
     }
-    if(canPlay){
-      setState((){
+    if (canPlay) {
+      setState(() {
         startGuess = 0;
         for (var i = 0; i < 30; i++) {
           guesses[i] = '';
         }
         for (var i = 0; i < 30; i++) {
-         guessState[i] = GuessStateEnum.unchecked;
+          guessState[i] = GuessStateEnum.unchecked;
         }
       });
       _controller.clear();
@@ -247,6 +254,7 @@ class _LetterGridState extends State<LetterGrid> {
         maintainInteractivity: true,
         child: TextField(
           controller: _controller,
+          focusNode: _focusNode,
           autofocus: true,
           autocorrect: false,
           enableSuggestions: false,
@@ -327,19 +335,31 @@ class _LetterGridState extends State<LetterGrid> {
             tooltip: 'Copy results',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _updateCanPlay,
-            tooltip: 'Check for new game'
-          ),
+              icon: const Icon(Icons.refresh),
+              onPressed: _updateCanPlay,
+              tooltip: 'Check for new game'),
         ],
       ),
       backgroundColor: Color(0xFF000000),
       body: GridView.count(
           crossAxisCount: 5,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(10),
           crossAxisSpacing: 5,
           mainAxisSpacing: 5,
           children: gridViewChildren),
+      resizeToAvoidBottomInset: false,
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.keyboard),
+        onPressed: () {
+          setState(() {
+            debugPrint('requesting focus???');
+            FocusScope.of(context).unfocus();
+            Timer(const Duration(milliseconds: 1), () {
+              FocusScope.of(context).requestFocus(_focusNode);
+            });
+          });
+        },
+      ),
     );
   }
 
