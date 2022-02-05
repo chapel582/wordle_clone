@@ -102,6 +102,8 @@ void endGame(
 ) async {
   final prefs = await SharedPreferences.getInstance();
 
+  prefs.setString('lastPlayedTime', DateTime.now().toString());
+
   var totalPlayed = prefs.getInt('totalPlayed') ?? 0;
   totalPlayed++;
   prefs.setInt('totalPlayed', totalPlayed);
@@ -167,6 +169,7 @@ class _LetterGridState extends State<LetterGrid> {
   @override
   void initState() {
     super.initState();
+    _updateCanPlay();
     for (var i = 0; i < 30; i++) {
       guessState.add(GuessStateEnum.unchecked);
     }
@@ -184,6 +187,33 @@ class _LetterGridState extends State<LetterGrid> {
   void _winGame(int winningRound) {
     canPlay = false;
     winGame(context, winningRound, guessState);
+  }
+
+  void _updateCanPlay() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    String lastPlayedTimeStr = prefs.getString('lastPlayedTime') ?? '';
+    if (lastPlayedTimeStr != ''){
+      final lastPlayedTime = DateTime.parse(lastPlayedTimeStr);
+      final now = DateTime.now();
+      final todayMidnight = DateTime(now.year, now.month, now.day);
+      canPlay = lastPlayedTime.isBefore(todayMidnight);
+    }
+    else{
+      canPlay = true;
+    }
+    if(canPlay){
+      setState((){
+        startGuess = 0;
+        for (var i = 0; i < 30; i++) {
+          guesses[i] = '';
+        }
+        for (var i = 0; i < 30; i++) {
+         guessState[i] = GuessStateEnum.unchecked;
+        }
+      });
+      _controller.clear();
+    }
   }
 
   @override
@@ -294,7 +324,12 @@ class _LetterGridState extends State<LetterGrid> {
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: _copyResults,
-            tooltip: 'Saved Suggestions',
+            tooltip: 'Copy results',
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _updateCanPlay,
+            tooltip: 'Check for new game'
           ),
         ],
       ),
@@ -319,7 +354,6 @@ class _LetterGridState extends State<LetterGrid> {
     final wordSelector =
         Random(1643945711103346 + (difference.inHours / 24).toInt());
     this.word = words[wordSelector.nextInt(words.length)];
-    debugPrint(this.word);
   }
 }
 
